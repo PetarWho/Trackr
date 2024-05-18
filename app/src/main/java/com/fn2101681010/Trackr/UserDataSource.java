@@ -44,11 +44,9 @@ public class UserDataSource {
         values.put(DatabaseHelper.COLUMN_LONGITUDE, user.getLongitude());
         values.put(DatabaseHelper.COLUMN_LATITUDE, user.getLatitude());
 
-        // Define the WHERE clause
         String selection = DatabaseHelper.COLUMN_ID + " = ?";
         String[] selectionArgs = { String.valueOf(user.getId()) };
 
-        // Update the row(s) in the database
         return database.update(DatabaseHelper.TABLE_USERS, values, selection, selectionArgs);
     }
 

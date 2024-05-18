@@ -98,7 +98,7 @@ public class RegisterActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(Location location) {
                             if (location != null) {
-                                registerUser(location.getLatitude(), location.getLongitude());
+                                registerUser(location.getLongitude(), location.getLatitude());
                             } else {
                                 Toast.makeText(RegisterActivity.this, "Failed to get location. Please try again.", Toast.LENGTH_SHORT).show();
                             }
@@ -136,7 +136,6 @@ public class RegisterActivity extends AppCompatActivity {
         long result = dataSource.addUser(username, email, password, latitude, longitude);
         if (result != -1) {
             Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
-            // Optionally, navigate to another activity (e.g., login activity) after successful registration
             startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
             finish(); // Close the register activity to prevent going back to it by pressing back button
         } else {
