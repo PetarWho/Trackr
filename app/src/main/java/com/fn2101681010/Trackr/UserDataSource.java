@@ -36,6 +36,22 @@ public class UserDataSource {
         return database.insert(DatabaseHelper.TABLE_USERS, null, values);
     }
 
+    public int updateUser(User user) {
+        ContentValues values = new ContentValues();
+        values.put(DatabaseHelper.COLUMN_USERNAME, user.getUsername());
+        values.put(DatabaseHelper.COLUMN_EMAIL, user.getEmail());
+        values.put(DatabaseHelper.COLUMN_PASSWORD, user.getPassword());
+        values.put(DatabaseHelper.COLUMN_LONGITUDE, user.getLongitude());
+        values.put(DatabaseHelper.COLUMN_LATITUDE, user.getLatitude());
+
+        // Define the WHERE clause
+        String selection = DatabaseHelper.COLUMN_ID + " = ?";
+        String[] selectionArgs = { String.valueOf(user.getId()) };
+
+        // Update the row(s) in the database
+        return database.update(DatabaseHelper.TABLE_USERS, values, selection, selectionArgs);
+    }
+
     public List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
         Cursor cursor = database.query(DatabaseHelper.TABLE_USERS, null, null, null, null, null, null);

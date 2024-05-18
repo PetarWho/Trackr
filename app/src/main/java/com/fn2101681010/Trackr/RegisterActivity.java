@@ -9,14 +9,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.location.Priority;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -46,6 +47,7 @@ public class RegisterActivity extends AppCompatActivity {
                 finish();
             }
         });
+
         // Initialize views
         usernameEditText = findViewById(R.id.edit_text_username);
         emailEditText = findViewById(R.id.edit_text_email);
@@ -64,8 +66,6 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 requestLocationPermission();
-                startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
-                finish();
             }
         });
     }
@@ -81,18 +81,19 @@ public class RegisterActivity extends AppCompatActivity {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
         } else {
-            getLocation();
+            getCurrentLocation();
         }
     }
 
-    private void getLocation() {
+    private void getCurrentLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // Permission not granted, request it
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
         } else {
-            // Permission granted, get last known location
-            fusedLocationClient.getLastLocation()
+            // Permission granted, get current location
+            LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, LOCATION_PERMISSION_REQUEST_CODE).build();
+            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
                     .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
@@ -112,7 +113,7 @@ public class RegisterActivity extends AppCompatActivity {
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted, get location
-                getLocation();
+                getCurrentLocation();
             } else {
                 // Permission denied, show a message or handle it gracefully
                 Toast.makeText(this, "Location permission denied. Registration cannot be completed.", Toast.LENGTH_SHORT).show();
@@ -136,6 +137,8 @@ public class RegisterActivity extends AppCompatActivity {
         if (result != -1) {
             Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
             // Optionally, navigate to another activity (e.g., login activity) after successful registration
+            startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+            finish(); // Close the register activity to prevent going back to it by pressing back button
         } else {
             Toast.makeText(this, "Registration failed. Please try again", Toast.LENGTH_SHORT).show();
         }

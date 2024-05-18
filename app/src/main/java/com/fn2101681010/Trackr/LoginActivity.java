@@ -17,6 +17,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button registerButton;
     private static final String PREFS_NAME = "UserPrefs";
     private static final String KEY_LOGGED_IN = "isLoggedIn";
+    private static final String KEY_USER_EMAIL = "userEmail";
     // You can also include UserDataSource if you need to validate login credentials against the database
 
     @Override
@@ -32,23 +33,13 @@ public class LoginActivity extends AppCompatActivity {
                 finish();
             }
         });
-        // Initialize views
         emailEditText = findViewById(R.id.edit_text_email);
         passwordEditText = findViewById(R.id.edit_text_password);
         loginButton = findViewById(R.id.login_button_login);
-
-        // Set click listener for login button
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Perform login
-
-                // Save login status
-                saveLoginStatus(true);
-
-                // Navigate to main activity
-                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                finish(); // Close login activity to prevent going back to it by pressing back button
+                login();
             }
         });
     }
@@ -59,6 +50,11 @@ public class LoginActivity extends AppCompatActivity {
         editor.apply();
     }
 
+    private void saveUserEmail(String email) {
+        SharedPreferences.Editor editor = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
+        editor.putString(KEY_USER_EMAIL, email);
+        editor.apply();
+    }
     private void login() {
         String email = emailEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
@@ -76,11 +72,12 @@ public class LoginActivity extends AppCompatActivity {
         dataSource.close();
 
         if (user != null && user.getPassword().equals(password)) {
-            // Login successful, navigate to the main activity
+            saveUserEmail(email);
+            saveLoginStatus(true);
+
             startActivity(new Intent(LoginActivity.this, MainActivity.class));
             finish(); // Close the login activity to prevent going back to it by pressing back button
         } else {
-            // Login failed, show error message
             Toast.makeText(this, "Invalid email or password", Toast.LENGTH_SHORT).show();
         }
     }
