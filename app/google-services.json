@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "575514843936",
+    "project_id": "trackr-f21f7",
+    "storage_bucket": "trackr-f21f7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:575514843936:android:8db53bfb85d4a24efe9545",
+        "android_client_info": {
+          "package_name": "com.fn2101681010.Trackr"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBpNgrDD_3k8ScY_VIBvObs7B0Rglx0gIg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

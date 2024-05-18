@@ -1,9 +1,9 @@
 package com.fn2101681010.Trackr;
 
+import android.Manifest;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.Manifest;
 import android.os.Handler;
 import android.widget.Toast;
 
@@ -21,20 +21,24 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
-    private GoogleMap mMap;
-    private UserDataSource dataSource;
-    private Marker currentUserMarker;
-    private Handler locationUpdateHandler = new Handler();
     private static final long LOCATION_UPDATE_INTERVAL = 20000; // 20 seconds
     private static final String PREFS_NAME = "UserPrefs";
     private static final String KEY_USER_EMAIL = "userEmail";
+
+    private GoogleMap mMap;
+    private FirebaseFirestore db;
+    private Handler locationUpdateHandler = new Handler();
     private FusedLocationProviderClient fusedLocationClient;
 
     @Override
@@ -42,13 +46,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize database
-        dataSource = new UserDataSource(this);
-        dataSource.open();
+        FirebaseApp.initializeApp(this);
+        db = FirebaseFirestore.getInstance();
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        // Check if location permission is not granted
+        // Check if location permission is granted
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // Request location permission
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
@@ -68,7 +71,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            // Check if the permission is granted
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted, initialize map and start location updates
                 initMap();
@@ -83,19 +85,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        // Get all users from the database
-        List<User> users = dataSource.getAllUsers();
-        for (User user : users) {
-            // Add a marker for each user
-            LatLng userLocation = new LatLng(user.getLatitude(), user.getLongitude());
-            MarkerOptions markerOptions = new MarkerOptions()
-                    .position(userLocation)
-                    .title(user.getUsername()); // Set the username as marker title
-            mMap.addMarker(markerOptions);
-        }
 
-        // Move the camera to show all markers
-        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(getBounds(users), 50));
+        // Fetch all users from Firestore
+        db.collection("users").get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                for (DocumentSnapshot document : task.getResult()) {
+                    String username = document.getString("username");
+                    double latitude = document.getDouble("latitude");
+                    double longitude = document.getDouble("longitude");
+                    LatLng userLocation = new LatLng(latitude, longitude);
+                    MarkerOptions markerOptions = new MarkerOptions()
+                            .position(userLocation)
+                            .title(username);
+                    mMap.addMarker(markerOptions);
+                    builder.include(userLocation);
+                }
+                mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 50));
+            } else {
+                Toast.makeText(this, "Failed to load users.", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         // Enable user location
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -103,20 +113,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    // Calculate the bounds for camera zoom
-    private LatLngBounds getBounds(List<User> users) {
-        LatLngBounds.Builder builder = new LatLngBounds.Builder();
-        for (User user : users) {
-            builder.include(new LatLng(user.getLatitude(), user.getLongitude()));
-        }
-        return builder.build();
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Close database connection
-        dataSource.close();
         // Stop location updates
         stopLocationUpdates();
     }
@@ -129,12 +128,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         locationUpdateHandler.removeCallbacks(locationRunnable);
     }
 
-    private Runnable locationRunnable = new Runnable() {
+    private final Runnable locationRunnable = new Runnable() {
         @Override
         public void run() {
-            // Get current location and save to database
             getCurrentLocation();
-            // Schedule the next location update
             locationUpdateHandler.postDelayed(this, LOCATION_UPDATE_INTERVAL);
         }
     };
@@ -142,30 +139,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void getCurrentLocation() {
         if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // Permission not granted, request it
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
         } else {
-            // Permission granted, get current location
-            LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, LOCATION_UPDATE_INTERVAL).build();
             fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null).addOnSuccessListener(MainActivity.this, location -> {
                 if (location != null) {
-                    saveLocationToDatabase(location.getLatitude(), location.getLongitude());
+                    saveLocationToFirestore(location.getLatitude(), location.getLongitude());
                 }
             });
         }
     }
 
-    private void saveLocationToDatabase(double latitude, double longitude) {
-        // Retrieve user email from SharedPreferences
+    private void saveLocationToFirestore(double latitude, double longitude) {
         String userEmail = getUserEmail();
         if (userEmail != null) {
-            // Get current user from database
-            User currentUser = dataSource.getUserByEmail(userEmail);
-            if (currentUser != null) {
-                currentUser.setLatitude(latitude);
-                currentUser.setLongitude(longitude);
-                dataSource.updateUser(currentUser); // Update user in the database
-            }
+            DocumentReference userRef = db.collection("users").document(userEmail);
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("latitude", latitude);
+            updates.put("longitude", longitude);
+            userRef.update(updates).addOnSuccessListener(aVoid -> {
+                // Location updated successfully
+            }).addOnFailureListener(e -> {
+                Toast.makeText(MainActivity.this, "Failed to update location.", Toast.LENGTH_SHORT).show();
+            });
         }
     }
 

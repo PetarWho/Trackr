@@ -12,12 +12,15 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.location.Priority;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -30,12 +33,12 @@ public class RegisterActivity extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocationClient;
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1002;
-
+    private FirebaseFirestore db;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
-
+        db = FirebaseFirestore.getInstance();
         loginButton = findViewById(R.id.register_button_login);
 
         // Set click listener for login button
@@ -131,15 +134,22 @@ public class RegisterActivity extends AppCompatActivity {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
-
+        Map<String, Object> user = new HashMap<>();
+        user.put("username", username);
+        user.put("email", email);
+        user.put("password", password);
+        user.put("latitude", latitude);
+        user.put("longitude", longitude);
         // Perform database insertion with location
-        long result = dataSource.addUser(username, email, password, latitude, longitude);
-        if (result != -1) {
-            Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
-            finish(); // Close the register activity to prevent going back to it by pressing back button
-        } else {
-            Toast.makeText(this, "Registration failed. Please try again", Toast.LENGTH_SHORT).show();
-        }
+        db.collection("users").document(email)
+                .set(user)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(RegisterActivity.this, "Registration successful", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+                    finish(); // Close the register activity to prevent going back to it by pressing back button
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(RegisterActivity.this, "Registration failed. Please try again", Toast.LENGTH_SHORT).show();
+                });
     }
 }
