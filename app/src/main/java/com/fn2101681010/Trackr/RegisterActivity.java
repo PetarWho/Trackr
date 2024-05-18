@@ -124,7 +124,7 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
-    private void registerUser(double latitude, double longitude) {
+    private void registerUser(double longitude, double latitude) {
         String username = usernameEditText.getText().toString().trim();
         String email = emailEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
@@ -138,8 +138,8 @@ public class RegisterActivity extends AppCompatActivity {
         user.put("username", username);
         user.put("email", email);
         user.put("password", password);
-        user.put("latitude", latitude);
         user.put("longitude", longitude);
+        user.put("latitude", latitude);
         // Perform database insertion with location
         db.collection("users").document(email)
                 .set(user)
