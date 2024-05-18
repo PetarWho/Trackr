@@ -1,12 +1,20 @@
 package com.fn2101681010.Trackr;
 
+import static com.google.firebase.firestore.DocumentChange.Type.ADDED;
+import static com.google.firebase.firestore.DocumentChange.Type.MODIFIED;
+import static com.google.firebase.firestore.DocumentChange.Type.REMOVED;
+
 import android.Manifest;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
+import androidx.core.app.NotificationCompat;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -21,8 +29,10 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -40,7 +50,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FirebaseFirestore db;
     private Handler locationUpdateHandler = new Handler();
     private FusedLocationProviderClient fusedLocationClient;
+    private Map<String, Marker> userMarkers = new HashMap<>();
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Permission has been granted, initialize map and start location updates
             initMap();
             startLocationUpdates();
+            startLocationService();
         }
     }
 
@@ -67,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapFragment.getMapAsync(this);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -75,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Permission granted, initialize map and start location updates
                 initMap();
                 startLocationUpdates();
+                startLocationService();
             } else {
                 // Permission denied, show a message or handle it gracefully
                 Toast.makeText(this, "Location permission denied. Map functionality will be limited.", Toast.LENGTH_SHORT).show();
@@ -86,30 +101,78 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Fetch all users from Firestore
-        db.collection("users").get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                LatLngBounds.Builder builder = new LatLngBounds.Builder();
-                for (DocumentSnapshot document : task.getResult()) {
-                    String username = document.getString("username");
-                    double latitude = document.getDouble("latitude");
-                    double longitude = document.getDouble("longitude");
+        // Fetch user's own location from Firestore and add a marker
+        String userEmail = getUserEmail();
+        if (userEmail != null) {
+            DocumentReference userRef = db.collection("users").document(userEmail);
+            userRef.get().addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    double latitude = documentSnapshot.getDouble("latitude");
+                    double longitude = documentSnapshot.getDouble("longitude");
                     LatLng userLocation = new LatLng(latitude, longitude);
-                    MarkerOptions markerOptions = new MarkerOptions()
-                            .position(userLocation)
-                            .title(username);
-                    mMap.addMarker(markerOptions);
-                    builder.include(userLocation);
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 15));
                 }
-                mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 50));
-            } else {
-                Toast.makeText(this, "Failed to load users.", Toast.LENGTH_SHORT).show();
-            }
-        });
+            });
+        }
 
         // Enable user location
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             mMap.setMyLocationEnabled(true);
+        }
+
+        setUpFirestoreListener();
+    }
+
+    private void setUpFirestoreListener() {
+        db.collection("users").addSnapshotListener((snapshot, e) -> {
+            if (e != null) {
+                // Handle errors
+                return;
+            }
+
+            for (DocumentChange dc : snapshot.getDocumentChanges()) {
+                DocumentSnapshot document = dc.getDocument();
+                String username = document.getString("username");
+                double latitude = document.getDouble("latitude");
+                double longitude = document.getDouble("longitude");
+                LatLng userLocation = new LatLng(latitude, longitude);
+
+                // Check the type of change (added, modified, or removed)
+                switch (dc.getType()) {
+                    case ADDED:
+                    case MODIFIED:
+                        // Update or add the marker on the map
+                        addOrUpdateMarker(username, userLocation);
+                        break;
+                    case REMOVED:
+                        // Remove the marker from the map if the user is removed from Firestore
+                        removeMarker(username);
+                        break;
+                }
+            }
+        });
+    }
+
+    private void addOrUpdateMarker(String username, LatLng userLocation) {
+        Marker existingMarker = userMarkers.get(username);
+        if (existingMarker != null) {
+            // Update existing marker
+            existingMarker.setPosition(userLocation);
+        } else {
+            // Add new marker
+            MarkerOptions markerOptions = new MarkerOptions()
+                    .position(userLocation)
+                    .title(username);
+            Marker marker = mMap.addMarker(markerOptions);
+            userMarkers.put(username, marker);
+        }
+    }
+
+    private void removeMarker(String username) {
+        Marker markerToRemove = userMarkers.get(username);
+        if (markerToRemove != null) {
+            markerToRemove.remove();
+            userMarkers.remove(username);
         }
     }
 
@@ -118,6 +181,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onDestroy();
         // Stop location updates
         stopLocationUpdates();
+        stopLocationService();
     }
 
     private void startLocationUpdates() {
@@ -167,5 +231,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private String getUserEmail() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         return prefs.getString(KEY_USER_EMAIL, null);
+    }
+
+    private void startLocationService() {
+        Intent serviceIntent = new Intent(this, LocationService.class);
+        startService(serviceIntent);
+    }
+
+    private void stopLocationService() {
+        Intent serviceIntent = new Intent(this, LocationService.class);
+        stopService(serviceIntent);
     }
 }
