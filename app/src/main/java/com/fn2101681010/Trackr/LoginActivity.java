@@ -9,6 +9,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
+
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -20,6 +22,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText passwordEditText;
     private Button loginButton;
     private Button registerButton;
+    private AppCompatButton registerNavButton;
     private FirebaseFirestore db;
 
     private static final String PREFS_NAME = "UserPrefs";
@@ -40,10 +43,21 @@ public class LoginActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
 
         registerButton = findViewById(R.id.login_button_register);
+        registerNavButton = findViewById(R.id.register_btn_nav);
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
+                overridePendingTransition(0, 0);
+                finish();
+            }
+        });
+
+        registerNavButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
+                overridePendingTransition(0, 0);
                 finish();
             }
         });

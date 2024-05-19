@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.app.ActivityCompat;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -29,6 +30,7 @@ public class RegisterActivity extends AppCompatActivity {
     private EditText passwordEditText;
     private Button registerButton;
     private Button loginButton;
+    private AppCompatButton loginNavButton;
     private UserDataSource dataSource;
     private FusedLocationProviderClient fusedLocationClient;
 
@@ -40,6 +42,7 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
         db = FirebaseFirestore.getInstance();
         loginButton = findViewById(R.id.register_button_login);
+        loginNavButton = findViewById(R.id.login_btn_nav);
 
         // Set click listener for login button
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -47,6 +50,17 @@ public class RegisterActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Navigate to login activity
                 startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+                overridePendingTransition(0, 0);
+                finish();
+            }
+        });
+
+        loginNavButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Navigate to login activity
+                startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+                overridePendingTransition(0, 0);
                 finish();
             }
         });

@@ -21,8 +21,8 @@
             android:orientation="horizontal">
 
             <ImageView
-                android:layout_width="70sp"
-                android:layout_height="70sp"
+                android:layout_width="80sp"
+                android:layout_height="80sp"
                 android:src="@drawable/ic_location" />
 
             <TextView
