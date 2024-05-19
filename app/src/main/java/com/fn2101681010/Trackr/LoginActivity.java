@@ -25,11 +25,16 @@ public class LoginActivity extends AppCompatActivity {
     private static final String PREFS_NAME = "UserPrefs";
     private static final String KEY_LOGGED_IN = "isLoggedIn";
     private static final String KEY_USER_EMAIL = "userEmail";
-    // You can also include UserDataSource if you need to validate login credentials against the database
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (userIsLoggedIn()) {
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
         setContentView(R.layout.activity_login);
 
         db = FirebaseFirestore.getInstance();
@@ -38,7 +43,6 @@ public class LoginActivity extends AppCompatActivity {
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Navigate to register activity
                 startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
                 finish();
             }
@@ -53,6 +57,11 @@ public class LoginActivity extends AppCompatActivity {
                 login();
             }
         });
+    }
+
+    private boolean userIsLoggedIn() {
+        SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        return sharedPreferences.getBoolean(KEY_LOGGED_IN, false);
     }
 
     private void saveLoginStatus(boolean isLoggedIn) {
@@ -71,7 +80,6 @@ public class LoginActivity extends AppCompatActivity {
         String email = emailEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
 
-        // Perform validation (e.g., check if email and password are not empty)
         if (email.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
