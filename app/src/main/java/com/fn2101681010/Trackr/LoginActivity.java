@@ -7,7 +7,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -15,6 +20,8 @@ public class LoginActivity extends AppCompatActivity {
     private EditText passwordEditText;
     private Button loginButton;
     private Button registerButton;
+    private FirebaseFirestore db;
+
     private static final String PREFS_NAME = "UserPrefs";
     private static final String KEY_LOGGED_IN = "isLoggedIn";
     private static final String KEY_USER_EMAIL = "userEmail";
@@ -24,6 +31,9 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        db = FirebaseFirestore.getInstance();
+
         registerButton = findViewById(R.id.login_button_register);
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -33,6 +43,7 @@ public class LoginActivity extends AppCompatActivity {
                 finish();
             }
         });
+
         emailEditText = findViewById(R.id.edit_text_email);
         passwordEditText = findViewById(R.id.edit_text_password);
         loginButton = findViewById(R.id.login_button_login);
@@ -55,6 +66,7 @@ public class LoginActivity extends AppCompatActivity {
         editor.putString(KEY_USER_EMAIL, email);
         editor.apply();
     }
+
     private void login() {
         String email = emailEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
@@ -65,20 +77,29 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        // Validate user credentials against the database
-        UserDataSource dataSource = new UserDataSource(this);
-        dataSource.open();
-        User user = dataSource.getUserByEmail(email);
-        dataSource.close();
-
-        if (user != null && user.getPassword().equals(password)) {
-            saveUserEmail(email);
-            saveLoginStatus(true);
-
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-            finish(); // Close the login activity to prevent going back to it by pressing back button
-        } else {
-            Toast.makeText(this, "Invalid email or password", Toast.LENGTH_SHORT).show();
-        }
+        db.collection("users").document(email).get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+                            if (document != null && document.exists()) {
+                                String storedPassword = document.getString("password");
+                                if (storedPassword != null && storedPassword.equals(password)) {
+                                    saveUserEmail(email);
+                                    saveLoginStatus(true);
+                                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                    finish(); // Close the login activity to prevent going back to it by pressing back button
+                                } else {
+                                    Toast.makeText(LoginActivity.this, "Invalid email or password", Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                Toast.makeText(LoginActivity.this, "Invalid email or password", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toast.makeText(LoginActivity.this, "Error accessing database. Please try again", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
     }
 }
