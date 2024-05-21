@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Trackr</string>
-        <string name="app_description">Trackr helps parents to keep an eye on their children, focusing solely on location tracking for peace of mind in their every day experiences.</string>
+    <string name="app_description">Trackr helps parents to keep an eye on their children, focusing solely on location tracking for peace of mind in their every day experiences.</string>
+    <string name="nav_button_map">Map</string>
+    <string name="nav_button_people">People</string>
+    <string name="nav_button_profile">Profile</string>
 </resources>
