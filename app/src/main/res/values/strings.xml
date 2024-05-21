@@ -4,4 +4,8 @@
     <string name="nav_button_map">Map</string>
     <string name="nav_button_people">People</string>
     <string name="nav_button_profile">Profile</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="sign_in">Sign In</string>
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
