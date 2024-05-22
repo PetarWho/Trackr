@@ -22,6 +22,8 @@ import com.google.android.gms.location.Priority;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -43,11 +45,9 @@ public class RegisterActivity extends AppCompatActivity {
         loginButton = findViewById(R.id.register_button_login);
         loginNavButton = findViewById(R.id.login_btn_nav);
 
-        // Set click listener for login button
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Navigate to login activity
                 startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
                 overridePendingTransition(0, 0);
                 finish();
@@ -78,7 +78,9 @@ public class RegisterActivity extends AppCompatActivity {
             }
         });
     }
-
+    boolean isEmailValid(CharSequence email) {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -133,6 +135,12 @@ public class RegisterActivity extends AppCompatActivity {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        if (!isEmailValid(email)){
+            Toast.makeText(this, "Invalid email", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         Map<String, Object> user = new HashMap<>();
         user.put("username", username);
         user.put("email", email);
