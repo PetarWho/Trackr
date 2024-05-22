@@ -11,6 +11,8 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.View;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
@@ -45,36 +47,56 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final long LOCATION_UPDATE_INTERVAL = 20000; // 20 seconds
     private static final String PREFS_NAME = "UserPrefs";
     private static final String KEY_USER_EMAIL = "userEmail";
-
     private GoogleMap mMap;
     private FirebaseFirestore db;
     private Handler locationUpdateHandler = new Handler();
     private FusedLocationProviderClient fusedLocationClient;
     private Map<String, Marker> userMarkers = new HashMap<>();
+    private ImageButton navPeople;
+    private ImageButton navProfile;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         FirebaseApp.initializeApp(this);
         db = FirebaseFirestore.getInstance();
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        navPeople = findViewById(R.id.nav_people);
 
-        // Check if location permission is granted
+        navPeople.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, PeopleActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                overridePendingTransition(0, 0);
+                startActivity(intent);
+            }
+        });
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // Request location permission
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
         } else {
-            // Permission has been granted, initialize map and start location updates
             initMap();
             startLocationUpdates();
             startLocationService();
         }
     }
-
+    @Override
+    public void onBackPressed() {
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+            getSupportFragmentManager().popBackStack();
+        } else {
+            super.onBackPressed();
+        }
+    }
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        overridePendingTransition(0, 0);
+    }
     private void initMap() {
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map_fragment);
         mapFragment.getMapAsync(this);

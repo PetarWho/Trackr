@@ -10,4 +10,5 @@
     <color name="colorOnPrimary">#FFFFFF</color>
     <color name="colorOnBackground">#FFFFFF</color>
     <color name="colorOnSurface">#FFFFFF</color>
+    <color name="lightGray">#DDDDDD</color>
 </resources>
