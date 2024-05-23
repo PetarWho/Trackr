@@ -101,7 +101,9 @@ public class PeopleActivity extends AppCompatActivity {
                     List<String> members = (List<String>) document.get("members");
                     if (members != null) {
                         if (members.contains(userEmail)) {
-                            groupList.add(document.getString("groupName"));
+                            String groupName = document.getString("groupName");
+                            long membersCount = members.size();
+                            groupList.add(groupName + "\n(Members: " + membersCount + ")");
                         }
                     }
                 }
