@@ -85,7 +85,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         db.collection("users").document(userEmail).get().addOnSuccessListener(documentSnapshot -> {
             if (documentSnapshot.exists()) {
-                String userName = documentSnapshot.getString("name");
+                String userName = documentSnapshot.getString("username");
                 textViewUserName.setText(userName);
                 textViewUserEmail.setText(userEmail);
             } else {
@@ -109,7 +109,11 @@ public class ProfileActivity extends AppCompatActivity {
                 for (QueryDocumentSnapshot document : task.getResult()) {
                     groupCount++;
                 }
-                textViewGroupCount.setText("Groups: " + groupCount);
+                if(groupCount != 1){
+                    textViewGroupCount.setText("Member of " + groupCount + " groups");
+                } else{
+                    textViewGroupCount.setText("Member of " + groupCount + " group");
+                }
             } else {
                 Toast.makeText(this, "Failed to fetch group count.", Toast.LENGTH_SHORT).show();
             }
@@ -129,6 +133,7 @@ public class ProfileActivity extends AppCompatActivity {
         editor.apply();
 
         Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
     }
