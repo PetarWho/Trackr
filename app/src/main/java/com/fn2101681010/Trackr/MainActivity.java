@@ -65,11 +65,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         navPeople = findViewById(R.id.nav_people);
-
+        navProfile = findViewById(R.id.nav_profile);
         navPeople.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, PeopleActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                overridePendingTransition(0, 0);
+                startActivity(intent);
+            }
+        });
+
+        navProfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 overridePendingTransition(0, 0);
                 startActivity(intent);
@@ -159,15 +169,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 double longitude = document.getDouble("longitude");
                 LatLng userLocation = new LatLng(latitude, longitude);
 
-                // Check the type of change (added, modified, or removed)
                 switch (dc.getType()) {
                     case ADDED:
                     case MODIFIED:
-                        // Update or add the marker on the map
                         addOrUpdateMarker(username, userLocation);
                         break;
                     case REMOVED:
-                        // Remove the marker from the map if the user is removed from Firestore
                         removeMarker(username);
                         break;
                 }
@@ -178,10 +185,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void addOrUpdateMarker(String username, LatLng userLocation) {
         Marker existingMarker = userMarkers.get(username);
         if (existingMarker != null) {
-            // Update existing marker
             existingMarker.setPosition(userLocation);
         } else {
-            // Add new marker
             MarkerOptions markerOptions = new MarkerOptions()
                     .position(userLocation)
                     .title(username);

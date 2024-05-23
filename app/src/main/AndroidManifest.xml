@@ -29,6 +29,7 @@
         <activity android:exported="true" android:name=".MainActivity" android:screenOrientation="portrait" />
         <activity android:exported="true" android:name=".PeopleActivity" android:screenOrientation="portrait" />
         <activity android:exported="true" android:name=".NewGroupActivity" android:screenOrientation="portrait" />
+        <activity android:exported="true" android:name=".ProfileActivity" android:screenOrientation="portrait" />
     </application>
 
 </manifest>

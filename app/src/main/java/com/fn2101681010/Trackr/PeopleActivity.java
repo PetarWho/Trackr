@@ -43,6 +43,7 @@ public class PeopleActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_people);
         navMap = findViewById(R.id.nav_map);
+        navProfile = findViewById(R.id.nav_profile);
 
         FirebaseApp.initializeApp(this);
         db = FirebaseFirestore.getInstance();
@@ -68,7 +69,15 @@ public class PeopleActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
+        navProfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(PeopleActivity.this, ProfileActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                overridePendingTransition(0, 0);
+                startActivity(intent);
+            }
+        });
 
     }
 

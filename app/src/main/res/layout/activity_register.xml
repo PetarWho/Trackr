@@ -94,7 +94,7 @@
             android:inputType="text"
             android:padding="12dp"
             android:textColor="@color/black"
-            android:textColorHint="@android:color/darker_gray" />
+            android:textColorHint="@color/darkGray" />
 
         <EditText
             android:id="@+id/edit_text_email"
@@ -106,7 +106,7 @@
             android:inputType="textEmailAddress"
             android:padding="12dp"
             android:textColor="@color/black"
-            android:textColorHint="@android:color/darker_gray" />
+            android:textColorHint="@color/darkGray" />
 
         <EditText
             android:id="@+id/edit_text_password"
@@ -119,7 +119,7 @@
             android:inputType="textPassword"
             android:padding="12dp"
             android:textColor="@color/black"
-            android:textColorHint="@android:color/darker_gray" />
+            android:textColorHint="@color/darkGray" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/register_button_register"

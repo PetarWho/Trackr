@@ -26,6 +26,8 @@ public class NewGroupActivity extends AppCompatActivity {
 
     private EditText groupNameEditText;
     private EditText passcodeEditText;
+    private EditText groupNameEditTextJoin;
+    private EditText passcodeEditTextJoin;
     private FirebaseFirestore db;
     private final List<String> members = new ArrayList<>();
     private static final String PREFS_NAME = "UserPrefs";
@@ -39,6 +41,8 @@ public class NewGroupActivity extends AppCompatActivity {
 
         groupNameEditText = findViewById(R.id.editTextGroupName);
         passcodeEditText = findViewById(R.id.editTextPasscode);
+        groupNameEditTextJoin = findViewById(R.id.editTextGroupNameJoin);
+        passcodeEditTextJoin = findViewById(R.id.editTextPasscodeJoin);
 
         Button createGroupButton = findViewById(R.id.btnCreateGroup);
         Button joinGroupButton = findViewById(R.id.btnJoinGroup);
@@ -98,8 +102,8 @@ public class NewGroupActivity extends AppCompatActivity {
                 });
     }
     private void joinGroup() {
-        String groupName = groupNameEditText.getText().toString().trim();
-        String passcode = passcodeEditText.getText().toString().trim();
+        String groupName = groupNameEditTextJoin.getText().toString().trim();
+        String passcode = passcodeEditTextJoin.getText().toString().trim();
         String userEmail = getUserEmail();
 
         if (groupName.isEmpty() || passcode.isEmpty()) {
@@ -108,7 +112,7 @@ public class NewGroupActivity extends AppCompatActivity {
         }
 
         db.collection("groups")
-                .whereEqualTo("name", groupName)
+                .whereEqualTo("groupName", groupName)
                 .whereEqualTo("passcode", passcode)
                 .get()
                 .addOnCompleteListener(task -> {
