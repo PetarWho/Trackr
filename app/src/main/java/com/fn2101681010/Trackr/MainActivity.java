@@ -38,8 +38,12 @@ import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -54,6 +58,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Map<String, Marker> userMarkers = new HashMap<>();
     private ImageButton navPeople;
     private ImageButton navProfile;
+    private String userEmailAddress;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -66,6 +71,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         navPeople = findViewById(R.id.nav_people);
         navProfile = findViewById(R.id.nav_profile);
+        userEmailAddress = getUserEmail();
+        if(userEmailAddress == null){
+            Toast.makeText(this, "User not found, please login again.", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            overridePendingTransition(0, 0);
+            startActivity(intent);
+            finish();
+        }
         navPeople.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -118,12 +131,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, initialize map and start location updates
                 initMap();
                 startLocationUpdates();
                 startLocationService();
             } else {
-                // Permission denied, show a message or handle it gracefully
                 Toast.makeText(this, "Location permission denied. Map functionality will be limited.", Toast.LENGTH_SHORT).show();
             }
         }
@@ -133,7 +144,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Fetch user's own location from Firestore and add a marker
         String userEmail = getUserEmail();
         if (userEmail != null) {
             DocumentReference userRef = db.collection("users").document(userEmail);
@@ -147,40 +157,108 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             });
         }
 
-        // Enable user location
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             mMap.setMyLocationEnabled(true);
         }
 
-        setUpFirestoreListener();
+        setUpGroupListener();
+    }
+
+    private void setUpGroupListener() {
+        db.collection("groups")
+                .whereArrayContains("members", userEmailAddress)
+                .addSnapshotListener((snapshot, e) -> {
+                    if (e != null) {
+                        Toast.makeText(MainActivity.this, "Failed to fetch user groups.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    List<String> groupMemberships = new ArrayList<>();
+                    for (DocumentChange dc : snapshot.getDocumentChanges()) {
+                        DocumentSnapshot document = dc.getDocument();
+                        List<String> members = document.toObject(Group.class).getMembers();
+                        groupMemberships.addAll(members);
+                    }
+
+                    // Set up listener for users based on group memberships
+                    setUpUserListener(groupMemberships);
+                });
+    }
+
+
+    private void setUpUserListener(List<String> groupMemberships) {
+        // Query users based on group memberships
+        db.collection("users")
+                .whereIn("email", groupMemberships)
+                .addSnapshotListener((snapshot, e) -> {
+                    if (e != null) {
+                        return;
+                    }
+
+                    for (DocumentChange dc : snapshot.getDocumentChanges()) {
+                        DocumentSnapshot document = dc.getDocument();
+                        String username = document.getString("username");
+                        double latitude = document.getDouble("latitude");
+                        double longitude = document.getDouble("longitude");
+                        LatLng userLocation = new LatLng(latitude, longitude);
+
+                        switch (dc.getType()) {
+                            case ADDED:
+                            case MODIFIED:
+                                addOrUpdateMarker(username, userLocation);
+                                break;
+                            case REMOVED:
+                                removeMarker(username);
+                                break;
+                        }
+                    }
+                });
     }
 
     private void setUpFirestoreListener() {
-        db.collection("users").addSnapshotListener((snapshot, e) -> {
+        db.collection("groups").whereArrayContains("members", userEmailAddress).addSnapshotListener((snapshot, e) -> {
             if (e != null) {
-                // Handle errors
+                Toast.makeText(MainActivity.this, "Failed to fetch user groups.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             for (DocumentChange dc : snapshot.getDocumentChanges()) {
                 DocumentSnapshot document = dc.getDocument();
-                String username = document.getString("username");
-                double latitude = document.getDouble("latitude");
-                double longitude = document.getDouble("longitude");
-                LatLng userLocation = new LatLng(latitude, longitude);
+                String groupName = document.getString("groupName");
 
-                switch (dc.getType()) {
-                    case ADDED:
-                    case MODIFIED:
-                        addOrUpdateMarker(username, userLocation);
-                        break;
-                    case REMOVED:
-                        removeMarker(username);
-                        break;
-                }
+                // Get all users from the current group
+                List<String> members = document.toObject(Group.class).getMembers();
+                db.collection("users")
+                        .whereIn("email", members)
+                        .addSnapshotListener((userSnapshot, userError) -> {
+                            if (userError != null) {
+                                Toast.makeText(MainActivity.this, "Failed to fetch users from group: " + groupName, Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            for (DocumentChange userDc : userSnapshot.getDocumentChanges()) {
+                                DocumentSnapshot userDocument = userDc.getDocument();
+                                String username = userDocument.getString("username");
+                                double latitude = userDocument.getDouble("latitude");
+                                double longitude = userDocument.getDouble("longitude");
+                                LatLng userLocation = new LatLng(latitude, longitude);
+
+                                switch (userDc.getType()) {
+                                    case ADDED:
+                                    case MODIFIED:
+                                        addOrUpdateMarker(username, userLocation);
+                                        break;
+                                    case REMOVED:
+                                        removeMarker(username);
+                                        break;
+                                }
+                            }
+                        });
             }
         });
     }
+
+
 
     private void addOrUpdateMarker(String username, LatLng userLocation) {
         Marker existingMarker = userMarkers.get(username);
@@ -206,7 +284,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Stop location updates
         stopLocationUpdates();
         stopLocationService();
     }
@@ -248,7 +325,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             updates.put("latitude", latitude);
             updates.put("longitude", longitude);
             userRef.update(updates).addOnSuccessListener(aVoid -> {
-                // Location updated successfully
             }).addOnFailureListener(e -> {
                 Toast.makeText(MainActivity.this, "Failed to update location.", Toast.LENGTH_SHORT).show();
             });
