@@ -6,25 +6,142 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <EditText
-        android:layout_marginTop="50dp"
-        android:id="@+id/editTextGroupName"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingVertical="15dp"
-        android:hint="Group Name" />
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingBottom="16dp">
 
-    <EditText
-        android:id="@+id/editTextPasscode"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/go_back_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Go Back"
+                android:src="@drawable/ic_back" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="60dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Groups"
+                android:textColor="@color/black"
+                android:textSize="48sp" />
+        </LinearLayout>
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="Join or create a group and conenct with people!"
+            android:textColor="@color/black"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingVertical="15dp"
-        android:hint="Passcode" />
+        android:layout_marginBottom="30dp"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btnCreateGroup"
-        android:layout_width="wrap_content"
-        android:layout_gravity="center"
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="60dp"
+            android:gravity="center"
+            android:text="Join Group"
+            android:textColor="@color/black"
+            android:textSize="40sp" />
+
+        <EditText
+            android:id="@+id/editTextGroupNameJoin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:autofillHints="groupName"
+            android:background="@drawable/edit_text_background"
+            android:hint="Group Name"
+            android:inputType="text"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="15dp"
+            android:textColor="@color/black" />
+
+        <EditText
+            android:id="@+id/editTextPasscodeJoin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints="passcode"
+            android:background="@drawable/edit_text_background"
+            android:hint="Passcode"
+            android:inputType="text"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="15dp"
+            android:textColor="@color/black" />
+
+        <Button
+            android:id="@+id/btnJoinGroup"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="@color/white"
+            android:text="Join Group" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Create Group" />
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:gravity="center"
+            android:text="Create Group"
+            android:textColor="@color/black"
+            android:textSize="40sp" />
+
+        <EditText
+            android:id="@+id/editTextGroupName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:autofillHints="groupName"
+            android:background="@drawable/edit_text_background"
+            android:hint="Group Name"
+            android:inputType="text"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="15dp"
+            android:textColor="@color/black" />
+
+        <EditText
+            android:id="@+id/editTextPasscode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints="passcode"
+            android:background="@drawable/edit_text_background"
+            android:hint="Passcode"
+            android:inputType="text"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="15dp"
+            android:textColor="@color/black" />
+
+        <Button
+            android:id="@+id/btnCreateGroup"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="@color/white"
+            android:text="Create Group" />
+    </LinearLayout>
 </LinearLayout>

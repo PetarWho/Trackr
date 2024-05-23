@@ -73,7 +73,6 @@ public class PeopleActivity extends AppCompatActivity {
     }
 
     private void createNewGroup() {
-        // Launch NewGroupActivity to create a new group
         Intent intent = new Intent(PeopleActivity.this, NewGroupActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         overridePendingTransition(0, 0);
