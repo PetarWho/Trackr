@@ -78,7 +78,6 @@ public class PeopleActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
     }
 
     private void createNewGroup() {
@@ -112,6 +111,20 @@ public class PeopleActivity extends AppCompatActivity {
                 Toast.makeText(this, "Failed to fetch groups.", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean groupUpdated = prefs.getBoolean("groupUpdated", false);
+        if (groupUpdated) {
+            prefs.edit().putBoolean("groupUpdated", false).apply();
+
+            groupList.clear();
+            fetchUserGroups();
+        }
     }
     private String getUserEmail() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
