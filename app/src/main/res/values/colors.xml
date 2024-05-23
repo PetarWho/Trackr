@@ -11,4 +11,6 @@
     <color name="colorOnBackground">#FFFFFF</color>
     <color name="colorOnSurface">#FFFFFF</color>
     <color name="lightGray">#DDDDDD</color>
+    <color name="blue">#2F56CA</color>
+    <color name="red">#CA2F2F</color>
 </resources>
