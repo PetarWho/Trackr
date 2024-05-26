@@ -180,14 +180,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         groupMemberships.addAll(members);
                     }
 
-                    // Set up listener for users based on group memberships
                     setUpUserListener(groupMemberships);
                 });
     }
 
 
     private void setUpUserListener(List<String> groupMemberships) {
-        // Query users based on group memberships
         db.collection("users")
                 .whereIn("email", groupMemberships)
                 .addSnapshotListener((snapshot, e) -> {
@@ -215,48 +213,48 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 });
     }
 
-    private void setUpFirestoreListener() {
-        db.collection("groups").whereArrayContains("members", userEmailAddress).addSnapshotListener((snapshot, e) -> {
-            if (e != null) {
-                Toast.makeText(MainActivity.this, "Failed to fetch user groups.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            for (DocumentChange dc : snapshot.getDocumentChanges()) {
-                DocumentSnapshot document = dc.getDocument();
-                String groupName = document.getString("groupName");
-
-                // Get all users from the current group
-                List<String> members = document.toObject(Group.class).getMembers();
-                db.collection("users")
-                        .whereIn("email", members)
-                        .addSnapshotListener((userSnapshot, userError) -> {
-                            if (userError != null) {
-                                Toast.makeText(MainActivity.this, "Failed to fetch users from group: " + groupName, Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-
-                            for (DocumentChange userDc : userSnapshot.getDocumentChanges()) {
-                                DocumentSnapshot userDocument = userDc.getDocument();
-                                String username = userDocument.getString("username");
-                                double latitude = userDocument.getDouble("latitude");
-                                double longitude = userDocument.getDouble("longitude");
-                                LatLng userLocation = new LatLng(latitude, longitude);
-
-                                switch (userDc.getType()) {
-                                    case ADDED:
-                                    case MODIFIED:
-                                        addOrUpdateMarker(username, userLocation);
-                                        break;
-                                    case REMOVED:
-                                        removeMarker(username);
-                                        break;
-                                }
-                            }
-                        });
-            }
-        });
-    }
+//    private void setUpFirestoreListener() {
+//        db.collection("groups").whereArrayContains("members", userEmailAddress).addSnapshotListener((snapshot, e) -> {
+//            if (e != null) {
+//                Toast.makeText(MainActivity.this, "Failed to fetch user groups.", Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+//
+//            for (DocumentChange dc : snapshot.getDocumentChanges()) {
+//                DocumentSnapshot document = dc.getDocument();
+//                String groupName = document.getString("groupName");
+//
+//                // Get all users from the current group
+//                List<String> members = document.toObject(Group.class).getMembers();
+//                db.collection("users")
+//                        .whereIn("email", members)
+//                        .addSnapshotListener((userSnapshot, userError) -> {
+//                            if (userError != null) {
+//                                Toast.makeText(MainActivity.this, "Failed to fetch users from group: " + groupName, Toast.LENGTH_SHORT).show();
+//                                return;
+//                            }
+//
+//                            for (DocumentChange userDc : userSnapshot.getDocumentChanges()) {
+//                                DocumentSnapshot userDocument = userDc.getDocument();
+//                                String username = userDocument.getString("username");
+//                                double latitude = userDocument.getDouble("latitude");
+//                                double longitude = userDocument.getDouble("longitude");
+//                                LatLng userLocation = new LatLng(latitude, longitude);
+//
+//                                switch (userDc.getType()) {
+//                                    case ADDED:
+//                                    case MODIFIED:
+//                                        addOrUpdateMarker(username, userLocation);
+//                                        break;
+//                                    case REMOVED:
+//                                        removeMarker(username);
+//                                        break;
+//                                }
+//                            }
+//                        });
+//            }
+//        });
+//    }
 
 
 
