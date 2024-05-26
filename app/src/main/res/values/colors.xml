@@ -14,5 +14,6 @@
     <color name="darkGray">#6B6B6B</color>
     <color name="blue">#2F56CA</color>
     <color name="red">#CA2F2F</color>
+    <color name="darkRed">#8F1616</color>
     <color name="watermark">#2D000000</color>
 </resources>

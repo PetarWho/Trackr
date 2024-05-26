@@ -126,10 +126,12 @@ public class PeopleActivity extends AppCompatActivity {
             fetchUserGroups();
         }
     }
+
     private String getUserEmail() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         return prefs.getString(KEY_USER_EMAIL, null);
     }
+
     @Override
     public void onBackPressed() {
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
@@ -138,6 +140,7 @@ public class PeopleActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);

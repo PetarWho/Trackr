@@ -50,12 +50,10 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
             editGroupItemButton.setOnClickListener(v -> {
                 Context context = itemView.getContext();
 
-                // Get the group name and passcode from the TextView
                 String groupName = groupNameTextView.getText().toString().trim();
                 String passcode = groupNameTextView.getText().toString().trim();
 
                 Intent intent = new Intent(context, EditGroupActivity.class);
-                // Pass the group name and passcode as extras in the intent
                 intent.putExtra("groupName", groupName);
 
                 intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);

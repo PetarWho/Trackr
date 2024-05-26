@@ -80,4 +80,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/passcodeEditText" />
 
+    <Button
+        android:id="@+id/leaveButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:text="Leave"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:backgroundTint="@color/darkRed"
+        app:layout_constraintStart_toEndOf="@+id/updateButton"
+        app:layout_constraintTop_toBottomOf="@+id/passcodeEditText" />
 </androidx.constraintlayout.widget.ConstraintLayout>

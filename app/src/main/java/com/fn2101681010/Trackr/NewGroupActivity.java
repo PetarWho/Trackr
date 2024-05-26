@@ -32,6 +32,7 @@ public class NewGroupActivity extends AppCompatActivity {
     private final List<String> members = new ArrayList<>();
     private static final String PREFS_NAME = "UserPrefs";
     private static final String KEY_USER_EMAIL = "userEmail";
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,7 +75,7 @@ public class NewGroupActivity extends AppCompatActivity {
         String groupName = groupNameEditText.getText().toString().trim();
         String passcode = passcodeEditText.getText().toString().trim();
         String email = getUserEmail();
-        if(email == null){
+        if (email == null) {
             Toast.makeText(this, "Invalid user. Please log in again.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -83,24 +84,37 @@ public class NewGroupActivity extends AppCompatActivity {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
-        members.add(email);
 
-        Map<String, Object> group = new HashMap<>();
-        group.put("groupName", groupName);
-        group.put("passcode", passcode);
-        group.put("members", members);
-        db.collection("groups").document()
-                .set(group)
-                .addOnSuccessListener(aVoid -> {
-                    Intent intent = new Intent(NewGroupActivity.this, PeopleActivity.class);
-                    overridePendingTransition(0, 0);
-                    startActivity(intent);
-                    finish();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(NewGroupActivity.this, "Failed to create a group. Please try again", Toast.LENGTH_SHORT).show();
+        db.collection("groups")
+                .whereEqualTo("groupName", groupName)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
+                        Toast.makeText(NewGroupActivity.this, "A group with this name already exists", Toast.LENGTH_SHORT).show();
+                    } else {
+                        members.add(email);
+
+                        Map<String, Object> group = new HashMap<>();
+                        group.put("groupName", groupName);
+                        group.put("passcode", passcode);
+                        group.put("members", members);
+                        group.put("creator", email);
+
+                        db.collection("groups").document()
+                                .set(group)
+                                .addOnSuccessListener(aVoid -> {
+                                    Intent intent = new Intent(NewGroupActivity.this, PeopleActivity.class);
+                                    overridePendingTransition(0, 0);
+                                    startActivity(intent);
+                                    finish();
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(NewGroupActivity.this, "Failed to create a group. Please try again", Toast.LENGTH_SHORT).show();
+                                });
+                    }
                 });
     }
+
     private void joinGroup() {
         String groupName = groupNameEditTextJoin.getText().toString().trim();
         String passcode = passcodeEditTextJoin.getText().toString().trim();
@@ -134,6 +148,7 @@ public class NewGroupActivity extends AppCompatActivity {
                     }
                 });
     }
+
     private String getUserEmail() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         return prefs.getString(KEY_USER_EMAIL, null);
@@ -147,6 +162,7 @@ public class NewGroupActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
