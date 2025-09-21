@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,11 +25,13 @@ public class ProfileActivity extends AppCompatActivity {
     private Button buttonLogout;
     private ImageButton navMap;
     private ImageButton navPeople;
+    private CheckBox checkboxBackgroundTracking;
 
     private FirebaseFirestore db;
     private static final String PREFS_NAME = "UserPrefs";
     private static final String KEY_USER_EMAIL = "userEmail";
     private static final String KEY_LOGGED_IN = "isLoggedIn";
+    private static final String KEY_BACKGROUND_TRACKING = "backgroundTracking";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +44,29 @@ public class ProfileActivity extends AppCompatActivity {
         textViewUserEmail = findViewById(R.id.textViewUserEmail);
         textViewGroupCount = findViewById(R.id.textViewGroupCount);
         buttonLogout = findViewById(R.id.buttonLogout);
+        checkboxBackgroundTracking = findViewById(R.id.checkboxBackgroundTracking);
+
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean isTrackingEnabled = prefs.getBoolean(KEY_BACKGROUND_TRACKING, false);
+        checkboxBackgroundTracking.setChecked(isTrackingEnabled);
+
+        if (isTrackingEnabled) {
+            startLocationService();
+        }
+
+        checkboxBackgroundTracking.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putBoolean(KEY_BACKGROUND_TRACKING, isChecked);
+            editor.apply();
+
+            if (isChecked) {
+                startLocationService();
+                Toast.makeText(ProfileActivity.this, "Background tracking enabled", Toast.LENGTH_SHORT).show();
+            } else {
+                stopLocationService();
+                Toast.makeText(ProfileActivity.this, "Background tracking disabled", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         FirebaseApp.initializeApp(this);
         db = FirebaseFirestore.getInstance();
@@ -74,6 +100,16 @@ public class ProfileActivity extends AppCompatActivity {
                 logout();
             }
         });
+    }
+
+    private void startLocationService() {
+        Intent serviceIntent = new Intent(this, LocationService.class);
+        startService(serviceIntent);
+    }
+
+    private void stopLocationService() {
+        Intent serviceIntent = new Intent(this, LocationService.class);
+        stopService(serviceIntent);
     }
 
     private void fetchUserProfile() {

@@ -104,7 +104,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } else {
             initMap();
             startLocationUpdates();
-            startLocationService();
+
+            // Only start background service if user enabled it
+            SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+            boolean isTrackingEnabled = prefs.getBoolean("backgroundTracking", false);
+            if (isTrackingEnabled) {
+                startLocationService();
+            }
         }
     }
     @Override
@@ -133,7 +139,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 initMap();
                 startLocationUpdates();
-                startLocationService();
+
+                SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+                boolean isTrackingEnabled = prefs.getBoolean("backgroundTracking", false);
+                if (isTrackingEnabled) {
+                    startLocationService();
+                }
             } else {
                 Toast.makeText(this, "Location permission denied. Map functionality will be limited.", Toast.LENGTH_SHORT).show();
             }

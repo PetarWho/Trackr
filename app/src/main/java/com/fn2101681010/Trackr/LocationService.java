@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.IBinder;
 import android.widget.Toast;
 
@@ -30,7 +31,7 @@ import java.util.Map;
 
 public class LocationService extends Service {
     private static final String CHANNEL_ID = "LocationServiceChannel";
-    private static final long LOCATION_UPDATE_INTERVAL = 20000; // 20 seconds
+    private static final long LOCATION_UPDATE_INTERVAL = 30000; // 30 seconds
     private static final String PREFS_NAME = "UserPrefs";
     private static final String KEY_USER_EMAIL = "userEmail";
 
@@ -51,9 +52,18 @@ public class LocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        // Service will restart if killed by the system (but not if force-stopped in Settings)
         return START_STICKY;
     }
 
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        // Restart service if user swipes app away from Recents
+        Intent restartServiceIntent = new Intent(getApplicationContext(), LocationService.class);
+        restartServiceIntent.setPackage(getPackageName());
+        startService(restartServiceIntent);
+        super.onTaskRemoved(rootIntent);
+    }
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -75,14 +85,19 @@ public class LocationService extends Service {
     }
 
     private void createNotificationChannel() {
-        NotificationChannel serviceChannel = new NotificationChannel(
-                CHANNEL_ID,
-                "Location Service Channel",
-                NotificationManager.IMPORTANCE_DEFAULT
-        );
+        NotificationChannel serviceChannel = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            serviceChannel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Location Service Channel",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            );
+        }
         NotificationManager manager = getSystemService(NotificationManager.class);
         if (manager != null) {
-            manager.createNotificationChannel(serviceChannel);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                manager.createNotificationChannel(serviceChannel);
+            }
         }
     }
 
